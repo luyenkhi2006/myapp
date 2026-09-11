@@ -103,7 +103,7 @@ Câu hỏi: {query}
 Trả lời:"""
 
                     llm = ChatGoogleGenerativeAI(
-                        model="gemini-1.5-flash",
+                        model="gemini-embedding-001",
                         google_api_key=api_key,
                         temperature=0,
                     )
