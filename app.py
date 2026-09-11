@@ -3,11 +3,9 @@ from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import FAISS
-from langchain.chains.question_answering import load_qa_chain
 import os
 
 st.set_page_config(page_title="RAG Tra cứu Tài liệu", layout="wide")
-
 st.title("📄 Hệ thống RAG Tra cứu Chính sách & Hướng dẫn")
 
 # Ô nhập API Key bên sidebar
@@ -75,12 +73,20 @@ if uploaded_files:
             # 4. Gọi LLM và hiển thị câu trả lời có nguồn
             st.subheader("🤖 Câu trả lời từ LLM")
             with st.spinner("Đang tổng hợp câu trả lời..."):
+                context = "\n\n".join([f"[Nguồn: {doc.metadata['source']}, Trang: {doc.metadata['page']}]\n{doc.page_content}" for doc in docs])
+                
+                prompt = f"""Dựa vào nội dung tài liệu bên dưới để trả lời câu hỏi. Trả lời chính xác, ngắn gọn dựa trên thông tin được cung cấp.
+
+Tài liệu tham khảo:
+{context}
+
+Câu hỏi: {query}
+Trả lời:"""
+
                 llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
-                chain = load_qa_chain(llm, chain_type="stuff")
-                answer = chain.run(input_documents=docs, question=query)
+                response = llm.invoke(prompt)
                 
-                st.success(answer)
+                st.success(response.content)
                 
-                # Trích xuất nguồn duy nhất
                 sources = list(set([doc.metadata['source'] for doc in docs]))
                 st.markdown(f"**📚 Nguồn tham khảo:** {', '.join(sources)}")
